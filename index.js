@@ -1,6 +1,8 @@
 const express = require('express')
 const app = express()
 const userRouter = require('./src/Routes/userRoutes')
+const cors = require("cors");
+app.use(cors());
 
 const port = 5000
 
