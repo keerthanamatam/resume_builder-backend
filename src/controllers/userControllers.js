@@ -8,7 +8,7 @@ const register = async (req, res) => {
   const { name, email, password, phoneNumber } = req.body
   if (name && email && password && phoneNumber) {
     hashedPassword = await bcrypt.hash(password, 10)
-    const sql = 'INSERT INTO users (name, email, password, PhoneNumber) VALUES (?, ?, ?, ?)';
+    const sql = 'INSERT INTO users (name, email, password, phoneNumber) VALUES (?, ?, ?, ?)';
     pool.query(sql, [name, email, hashedPassword, phoneNumber], (err, result) => {
       if (err) {
         console.log(err)
@@ -24,37 +24,7 @@ const register = async (req, res) => {
   }
 };
 
-// const login = (req, res) => {
-//   const { email, password } = req.body
-//   if (email && password) {
-//     pool.query(`select * from users where email = '${email}'`, async (err, result) => {
-//       if (err) {
-//         return res.status(400).send({ error: 'Please create an account' })
-//       }
-//       else {
-//         console.log(result[0].password)
-//         const isMatch = await bcrypt.compare(password, result[0].password)
-//         if (!isMatch) {
-//           return res.status(400).send({ error: 'Wrong password' })
-//         }
-//         const sessionToken = jwt.sign({
-//           email: result.email,
-//           password: result.password
-//         }, secretKey, { expiresIn: '1h' })
-//         const sql = 'INSERT INTO session (session, email) VALUES (?, ?)';
-//         pool.query(sql, [sessionToken, result[0].email], (err, insertResult) => {
-//           if (err){
-//             return res.status(400).send({ error: 'Problem in creating session' })
-//           }
-//              return res.status(200).send({
-//             message: "Logged in successfully",
-//             token: sessionToken
-//           });
-//         })
-//       }
-//     })
-//   }
-// }
+
 
 const login = (req, res) => {
   const { email, password } = req.body;
@@ -74,7 +44,7 @@ const login = (req, res) => {
         }
 
         const sessionToken = jwt.sign(
-          { email: result[0].email }, // fixed: result[0], not result
+          { email: result[0].email }, 
           secretKey,
           { expiresIn: '1h' }
         );

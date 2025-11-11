@@ -13,6 +13,10 @@ app.get('/', (req, res)=> {
 })
 app.use('/user',userRouter);
 
+app.use(cors({
+  origin: 'http://localhost:3000'
+}));
+
 
 app.listen(port, ()=>{
     console.log(`hey there, listening to '${port}' `)
