@@ -1,4 +1,5 @@
 const pool = require('../config/connect');
+
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
@@ -41,25 +42,28 @@ const createRefreshToken = (email) => jwt.sign(
 );
 
 
-const register = (req, res) => {
-   const {name, email, password, phoneNumber } = req.body
-   if(name, email, password, phoneNumber){
-    const hashedPassword = bcrypt.hash(password, 10)
-    const sql = `insert into users (name, email, password, phoneNumber) values(?,?,?,?)`
-    pool.query(sql, [name, email, hashedPassword, phoneNumber], (err, result)=> {
-      if(err){
-        console.log(err)
-        return res.status(400).send({'error' : err})
-      }else{
-        console.log(result)
-    
-        return res.status(201).send({'Message' : "User created Successfully" })
+const register = async (req, res) => {
+  const { name, email, password, phoneNumber } = req.body || {};
+  if (!name || !email || !password || !phoneNumber) {
+    return res.status(400).send({ message: 'Please enter all the details' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const sql = 'INSERT INTO users (name, email, password, phoneNumber) VALUES (?, ?, ?, ?)';
+    pool.query(sql, [name, email, hashedPassword, phoneNumber], (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(400).send({ error: 'Could not create user' });
       }
-    })
-   }else{
-    return res.status(400).send({'Message' : "Please Enter all the details"})
-   }
-}
+
+      return res.status(201).send({ message: 'User created successfully' });
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ error: 'Server error' });
+  }
+};
 
 
 
@@ -68,6 +72,7 @@ const login = (req, res) => {
   if (email && password) {
     pool.query(`SELECT * FROM users WHERE email = ?`, [email], async (err, result) => {
       if (err) {
+        console.log(err)
         return res.status(400).send({ error: 'Database error' });
       }
       if (result.length === 0) {
@@ -76,6 +81,7 @@ const login = (req, res) => {
 
       try {
         const isMatch = await bcrypt.compare(password, result[0].password);
+        console.log("isMatch", isMatch)
         if (!isMatch) {
           return res.status(400).send({ error: 'Wrong password' });
         }
@@ -87,10 +93,10 @@ const login = (req, res) => {
           { expiresIn: '15m' }
         );
         const refreshToken = createRefreshToken(email);
-
         const sql = 'INSERT INTO session (session, email) VALUES (?, ?)';
         pool.query(sql, [refreshToken, email], (err) => {
           if (err) {
+            console.log(err);
             return res.status(500).send({ error: 'Problem in creating session' });
           }
           setAuthCookies(res, sessionToken, refreshToken);
@@ -100,6 +106,7 @@ const login = (req, res) => {
         });
 
       } catch (error) {
+        console.log("error", error);
         return res.status(500).send({ error: 'Server error' });
       }
     });
